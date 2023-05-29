@@ -33,9 +33,8 @@ async def send_message_via_websocket(message_data):
 async def handle_message(message: types.Message):
     if message.reply_to_message:
         text = message.reply_to_message.text
-        print(text)
-        cursor.execute(f"SELECT from_user FROM chats_message WHERE text = '{text}'")
-        id = cursor.fetchone()[0]
+        print(text.split(':')[0])
+        id = text.split(':')[0]
         cursor.execute(f"SELECT id FROM chats_chat WHERE driver_id = '{message.chat.id}' AND user_id='{id}'")
         chat = cursor.fetchone()[0]
         message_data = {
