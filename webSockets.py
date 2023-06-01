@@ -1,19 +1,10 @@
 import asyncio
 from websockets.server import serve
-from websockets.sync.client import connect
 import websockets
 import json
 import bot_documents
 import bot_sales
-import pymysql
-
-conn = pymysql.connect(
-    host='mysqlserver3.mysql.database.azure.com',
-    user='yehor',
-    password='4vRes4^9mH',
-    database='messenger'
-)
-cursor = conn.cursor()
+import mysql.connector
 
 names = {'Бухгалтерия':bot_documents, 'CarsHauler':bot_sales}
 
@@ -27,21 +18,30 @@ class Producer:
             await client.send(message)
 
     async def handle_message(self, websocket, path):
+        tgid = None
         data = await websocket.recv()
         print("client send:", data)
         message = json.loads(data)
         try:
             if message['user'] != '-':
-                await self.bots[path].send_message(message['driver'], message['message'])
+                tgid = await self.bots[path].send_message(message['driver'], message['message'])
         except:
             print("Error")
         await self.send_message(json.dumps(message), path)
-        print('sended')
-        insertion = 'INSERT INTO chats_message(from_user, text, chat_id, driver_id) VALUES(%s, %s, %s, %s)'
-        values = (message['user'], message['message'], int(message['chat']), int(message['driver']))
+        if 'id' in message:
+            tgid = message['id']
+
+        print(f"ID: {tgid}")
+
+        conn = mysql.connector.connect(user='yehor', password='4vRes4^9mH', host='mysqlserver3.mysql.database.azure.com', database='messenger')
+        cursor = conn.cursor()
+
+        insertion = 'INSERT INTO chats_message(tgid, from_user, text, chat_id, driver_id) VALUES(%s, %s, %s, %s, %s)'
+        values = (tgid, message['user'], message['message'], int(message['chat']), int(message['driver']))
         cursor.execute(insertion, values)
         conn.commit()
-        print('saved')
+        cursor.close()
+        conn.close()
 
     async def new_client_connected(self, websocket, path:str):
         print("New client")
@@ -53,12 +53,17 @@ class Producer:
             self.clients[path].append(websocket)
 
         if path not in self.bots:
+            conn = mysql.connector.connect(user='yehor', password='4vRes4^9mH', host='mysqlserver3.mysql.database.azure.com', database='messenger')
+            cursor = conn.cursor()
+
             cursor.execute(f"SELECT department_id FROM chats_chat WHERE id = '{path.replace('/', '')}'")
             id = cursor.fetchone()[0]
             cursor.execute(f"SELECT name FROM chats_department WHERE id = '{id}'")
             name = cursor.fetchone()[0]
             print(name)
             self.bots[path] = names[name]
+            cursor.close()
+            conn.close()
 
         try:
             while True:

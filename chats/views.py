@@ -21,7 +21,7 @@ def index(request, user):
     # Users.objects.create(id=2, name='TIMA', password='1234', email='tima@gmail.com', isManager=False, tgid=626712893, department=Department.objects.get(id=12))
     # Chat.objects.create(driver=Driver.objects.get(id=-983547137), chat_name='test100', department=Department.objects.get(id=Users.objects.get(id=user).department.id), user=Users.objects.get(id=user))
     print(user)
-    return render(request, 'chats/index.html', {'chats':Chat.objects.get(user=Users.objects.get(id=user)), 'me':user, })
+    return render(request, 'chats/index.html', {'chats':Chat.objects.filter(user=Users.objects.get(id=user)), 'me':user, 'chats_ser':serializers.serialize('json', Chat.objects.filter(user=Users.objects.get(id=user)))})
 
 def enter_chat(request):
     messages = Message.objects.filter(chat=request.GET.get('id')).all()

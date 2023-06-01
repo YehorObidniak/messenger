@@ -87,6 +87,7 @@
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-end;
+        margin-top:3vh;
     }
 
     .send_button {
@@ -169,19 +170,16 @@
         border-radius: 1.125rem 1.125rem 1.125rem 0;
         background: #5d6164;
     }
-
     .img_to_menu{
         height: 3vh;
     }
-
     .header_container{
         z-index: 1;
     position: fixed;
     background: white;
     width: 100%;
     }
-    
-    .user_chat {
+      .user_chat {
         background-color: #F3F1F1;
         height: 8vh;
     }
@@ -229,107 +227,47 @@
     .last_text_chat {
         opacity: 0.7;
     }
-
-    .content_chats {
-        width: 100%;
-        display: flex;
-        height: 100%;
-    }
-
-    .new_message {
-        height: 100%;
-        align-items: center;
-        display: flex;
-        overflow: hidden;
-        width: 25%;
-        justify-content: flex-end;
-    }
-
-    .new_message img {
-        width: 3vh;
-        height: 3vh;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .new_message_counter {
-        overflow: hidden;
-        justify-content: center;
-        position: relative;
-        display: flex;
-        width: 3vh;
-        height: 3vh;
-        background: #0000ff80;
-        border-radius: 50%;
-        text-align: center;
-        color: white;
-        font-size: 2vh;
-        font-weight: 400;
-        margin-right: 0.5vw;
-    }
 </style>
 
-<body>
+<body onload="enter_chat()">
     <div class="content">
-        {% for chat in chats %}
-        <div class="user_chat unfocused" id="" onclick="enter_chat('{{chat.id}}', '{{chat.driver.id}}')">
-            <div class="content_chats">
-                <div class="img_container">
-                    <img src="{% static '/test.jpg' %}" id="">
-                </div>
-
-                <div class="text_user_chat">
-                    <div>
-                        <div class="name_chat">
-                            {{chat.chat_name}}
-                        </div>
-
-                        <div class="last_text_chat">
-                        </div>
-                    </div>
-                </div>
+<!-- 
+        <div class="header_container"> 
+        <img src="Left-Arrow-PNG-Image.png" class="img_to_menu" onclick="add_content()">
+        </div> -->
+        
+        <div class="chat_container">
+            <div class="messages" id="messages_container">
             </div>
-
-
         </div>
-        {% endfor %}
+    
+        <div class="input_container">
+            <textarea rows="2" placeholder="Write a message.." id="message" onkeydown="checkEnter(event)"></textarea>
+            <div class="send_button" id="send"><img src="{% static '/next.png' %}"></div>
+        </div>
     </div>
 
     {% csrf_token %}
     <script>
-        const chats = JSON.parse(he.decode('{{chats_ser}}'))
+        const chat = '{{chats.id}}'
         const me = '{{me}}';
         let chatSocket;
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        let driver;
-        let driverName;
+        const driver = '{{chats.driver.id}}'
+        const driverName = '{{chats.driver.name}}'
 
         let RoomId;
 
-        function enter_chat(id, driver_id){
-            RoomId = id;
-            driver = driver_id;
+        function enter_chat(){
 
-            let content = document.querySelector(".content");
-            content.innerHTML=`<div class="header_container"> 
-                    <img src="{% static '/Left-Arrow-PNG-Image.png' %}" class="img_to_menu" onclick="to_users()">
-                </div>
-
-                <div class="chat_container">
-                    <div class="messages" id="messages_container">
-                    </div>
-                </div>
-
-                <div class="input_container">
-                    <textarea rows="2" placeholder="Write a message.." id="message" onkeydown="checkEnter(event)"></textarea>
-                    <div class="send_button" id="send"><img src="{% static '/next.png' %}"></div>
-                </div>`
-            
-            fetch('{% url "enter_chat" %}' + '?' + new URLSearchParams(`id=${id}`))
+            RoomId = chat;
+            fetch('{% url "enter_chat" %}' + '?' + new URLSearchParams(`id=${chat}`))
             .then(response => response.json())
             .then(data => {
                 let messages = JSON.parse(data.messages)
                 console.log(messages)
+                document.querySelector('#messages_container').innerHTML = ''
+                
 
                 messages.map(message => {
                     if(message.fields.from_user == me){
@@ -361,7 +299,7 @@
 
             if(chatSocket != null){chatSocket.close()}
 
-            chatSocket = new WebSocket('ws://84.54.153.190:8765/' + RoomId);
+            chatSocket = new WebSocket('ws://127.0.0.1:8765/' + RoomId);
 
             chatSocket.onopen = function() {
             console.log('WebSocket connection established.');
@@ -431,39 +369,6 @@
                 }));
                 console.log(driver)
                 messageInputDom.value = '';
-        }
-
-        function to_users() {
-            chatSocket.close()
-            let content = document.querySelector(".content");
-            content.innerHTML = '';
-            chats.map(chat =>{
-                console.log(chat)
-                content.innerHTML+=`
-                <div class="user_chat unfocused" id="" onclick="enter_chat(${chat.pk}, ${chat.fields.driver})">
-                    <div class="content_chats">
-                        <div class="img_container">
-                            <img src="{% static '/test.jpg' %}" id="">
-                        </div>
-
-                        <div class="text_user_chat">
-                            <div>
-                                <div class="name_chat">
-                                    ${chat.fields.chat_name}
-                                </div>
-
-                                <div class="last_text_chat">
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                </div>`;
-            })
-
-           
         }
 
     </script>

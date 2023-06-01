@@ -28,6 +28,7 @@ class Chat(models.Model):
     
 class Message(models.Model):
     id = models.AutoField(primary_key=True)
+    tgid = models.IntegerField(null=True)
     from_user = models.CharField(max_length=64)
     # time = models.TimeField(default=time())
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, null=True)
