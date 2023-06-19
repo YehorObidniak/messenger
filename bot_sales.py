@@ -21,7 +21,7 @@ async def send_message_via_websocket(message_data):
         await websocket.send(json.dumps(message_data))
         print(f'Sent message: {message_data["message"]}')
 
-def set_message_data(rep_tgid, chat_id, text, tgid):
+def set_message_data(rep_tgid, chat_id, text, tgid, name):
     conn = mysql.connector.connect(user='yehor', password='4vRes4^9mH', host='mysqlserver3.mysql.database.azure.com', database='messenger')
     cursor = conn.cursor()
 
@@ -33,14 +33,13 @@ def set_message_data(rep_tgid, chat_id, text, tgid):
     cursor.close()
     conn.close()
 
-    return {'message': text, 'user': '-', 'chat': chat, 'driver': chat_id, 'id': tgid}
+    return {'message': text, 'user': '-', 'chat': chat, 'driver': chat_id, 'id': tgid, 'department':name}
 
 @dp.message_handler()
 async def handle_message(message: types.Message):
     if message.reply_to_message:
         try:
-            response = await send_message_via_websocket(set_message_data(message.reply_to_message.message_id, message.chat.id, message.text, message.message_id))
-            print(response)
+            await send_message_via_websocket(set_message_data(message.reply_to_message.message_id, message.chat.id, message.text, message.message_id, message.from_user.first_name))
         except (ConnectionError, websockets.WebSocketException) as e:
             print(f"Error occurred while connecting to websocket: {e}")
 

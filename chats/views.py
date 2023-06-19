@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import JsonResponse
-from .models import Chat, Message, Department, Users, Driver
+from .models import Chat, Message, Department, Users
 from django.db.models import Q
 from django.core import serializers
 
@@ -17,14 +17,26 @@ def index(request, user):
     # Users.objects.all().delete()
     # Department.objects.create(name='sale')
     # Department.objects.create(name='document')
-    # Driver.objects.create(name='driver1', id = -983547137)
-    # Users.objects.create(id=2, name='TIMA', password='1234', email='tima@gmail.com', isManager=False, tgid=626712893, department=Department.objects.get(id=12))
-    # Chat.objects.create(driver=Driver.objects.get(id=-983547137), chat_name='test100', department=Department.objects.get(id=Users.objects.get(id=user).department.id), user=Users.objects.get(id=user))
+    # chat = Chat.objects.create(id=-814587432, chat_name='driver3')
+    # chat = Chat.objects.get(id=-919418148)
+    # chat.users.add(Users.objects.get(id=141))
+    # chat.users.add(Users.objects.get(id=142))
+    # chat.users.add(Users.objects.get(id=29))
+    # chat = Chat.objects.get(id=-819593283)
+    # chat.users.add(Users.objects.get(id=23))
+    # chat.users.add(Users.objects.get(id=141))
+    # chat.users.add(Users.objects.get(id=142))
+    # chat.users.add(Users.objects.get(id=29))
+
+    # user = Users.objects.get(id=23)
+    # user.tgid = 954130482
+    # user.save()
+
+
     print(user)
-    return render(request, 'chats/index.html', {'chats':Chat.objects.filter(user=Users.objects.get(id=user)), 'me':user, 'chats_ser':serializers.serialize('json', Chat.objects.filter(user=Users.objects.get(id=user)))})
+    return render(request, 'chats/index.html', {'chats':Chat.objects.filter(users=Users.objects.get(id=user)), 'me':user, 'chats_ser':serializers.serialize('json', Chat.objects.filter(users=Users.objects.get(id=user))), 'department':Users.objects.get(id=user).department.name})
 
 def enter_chat(request):
     messages = Message.objects.filter(chat=request.GET.get('id')).all()
-    # print(messages)
 
     return JsonResponse(data={'messages':serializers.serialize('json', messages)})

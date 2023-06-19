@@ -6,11 +6,11 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/he/he.js"></script>
 </head>
 <style>
-    body {
+     body {
         background: #2c2c2c;
         margin: 0;
         font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
@@ -19,8 +19,7 @@
     .chat_container {
         width: 100%;
         height: 100%;
-        bottom: 6vh;
-        position: relative;
+
     }
 
     .content_chats {
@@ -36,19 +35,23 @@
         object-fit: cover;
     }
 
+
     .input_container {
-        width: 100%;
-        display: flex;
-        height: 5vh;
-        flex-wrap: nowrap;
-        align-items: flex-end;
-        position: fixed;
-        background-color: white;
-        padding: 0.2vh 0 1vh;
-        overflow: hidden;
-        border-top: 1px solid #c7c7c7;
-        bottom: 0vh;
+    width: 100%;
+    display: flex;
+    height: 5vh;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    position: fixed;
+    background-color: white;
+    padding: 0.2vh 0 1vh;
+    overflow: hidden;
+    border-top: 1px solid #c7c7c7;
+    bottom: 0;
+    right: 0;
+    left:0;
     }
+
 
     .input_container textarea {
         width: 87%;
@@ -63,7 +66,9 @@
     .input_container textarea:focus {
         outline: none;
         border: none;
+
     }
+    
 
     .arrow_container {
         height: 100%;
@@ -79,14 +84,15 @@
     }
 
     .messages {
-        overflow-y: auto;
+        overflow-y: scroll;
         padding: 10px;
-        top: 1vh;
+        margin-top: 3vh;
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-end;
+        margin-bottom: 5vh;
     }
 
     .send_button {
@@ -101,8 +107,9 @@
     }
 
     .send_button img {
-        height: 2vh;
-        width: 2vh;
+        height: 3vh;
+        width: 3vh;
+        margin-left: 1vw;
 
     }
 
@@ -121,13 +128,13 @@
         color: rgb(255, 255, 255);
         opacity: 0.5;
     }
-    
+
     .our_message,.their_message{
         padding: 1vh;
         font-size: 2vh;
         margin: 1vh;
         color: white;
-    
+
     }
 
     .our_message{
@@ -141,7 +148,7 @@
         margin-right: 6vh;
         bottom: 1vh;
         position: relative;
-        
+
     }
 
     .chat_username_message_us{
@@ -152,7 +159,7 @@
     .chat_username_message_their{
         text-align: start;
         left: 1vh;
-    }  
+    }
 
     .content_us, .content_their{
         display: flex;
@@ -171,19 +178,21 @@
     }
 
     .img_to_menu{
-        height: 3vh;
+        height: 4vh;
+        margin: 1vh;
     }
 
     .header_container{
         z-index: 1;
-    position: fixed;
-    background: white;
-    width: 100%;
+        position: fixed;
+        width: 100%;
+        top: 0;
     }
-    
+
     .user_chat {
         background-color: #F3F1F1;
         height: 8vh;
+        margin: 1px;
     }
 
     .user_chat img {
@@ -275,7 +284,7 @@
         <div class="user_chat unfocused" id="" onclick="enter_chat('{{chat.id}}', '{{chat.driver.id}}')">
             <div class="content_chats">
                 <div class="img_container">
-                    <img src="{% static '/test.jpg' %}" id="">
+                    <img src="" id="">
                 </div>
 
                 <div class="text_user_chat">
@@ -297,39 +306,57 @@
 
     {% csrf_token %}
     <script>
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const chats = JSON.parse(he.decode('{{chats_ser}}'))
         const me = '{{me}}';
+        const department = '{{department}}';
+
         let chatSocket;
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         let driver;
         let driverName;
-
         let RoomId;
+
+        function iphone(){
+            console.log("1")
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            // тут ваш код, який буде виконаний для пристроїв iPhone, iPad і iPod
+            document.body.style.backgroundColor = "red";
+
+            document.querySelector('.input_container').style.cssText = "    width: 100%; display: flex;align-items: flex-end;background-color: white;padding: 0.2vh 0 1vh; overflow: hidden;";
+
+            document.querySelector('.messages').style.cssText = "overflow-y: scroll; padding: 10px; margin-top: 3vh; position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding-bottom: 40vh;";
+
+                }
+        }
+
 
         function enter_chat(id, driver_id){
             RoomId = id;
             driver = driver_id;
 
             let content = document.querySelector(".content");
-            content.innerHTML=`<div class="header_container"> 
-                    <img src="{% static '/Left-Arrow-PNG-Image.png' %}" class="img_to_menu" onclick="to_users()">
+            content.innerHTML=`<div class="header_container">
+                    <img src="" class="img_to_menu" onclick="to_users()">
                 </div>
 
                 <div class="chat_container">
                     <div class="messages" id="messages_container">
-                    </div>
+
                 </div>
 
+                
                 <div class="input_container">
                     <textarea rows="2" placeholder="Write a message.." id="message" onkeydown="checkEnter(event)"></textarea>
-                    <div class="send_button" id="send"><img src="{% static '/next.png' %}"></div>
+                    <div class="send_button"><img src=""></div>
                 </div>`
-            
+
             fetch('{% url "enter_chat" %}' + '?' + new URLSearchParams(`id=${id}`))
             .then(response => response.json())
             .then(data => {
                 let messages = JSON.parse(data.messages)
                 console.log(messages)
+                
+                const types = {'audio':set_audio, 'text': set_text, 'photo':set_photo, 'video':set_video}
 
                 messages.map(message => {
                     if(message.fields.from_user == me){
@@ -345,23 +372,24 @@
                     `
                 }
                 else{
+                    content = types[message.fields.typeOfMessage](message.fields.text)
                     document.querySelector('#messages_container').innerHTML += `
                     <div class="their_message">
                 <div class="chat_username_message_their">
-                    ${driverName}
+                    ${message.fields.departmentName}
                 </div>
                 <div class="content_their">
-                    <div>${message.fields.text}</div>
+                    ${content}
                 </div>
             </div>
-                    `
+                    `           
                 }
-                })
+            })
             })
 
             if(chatSocket != null){chatSocket.close()}
 
-            chatSocket = new WebSocket('ws://84.54.153.190:8765/' + RoomId);
+            chatSocket = new WebSocket('wss://entinsoft.com:8080/' + RoomId);
 
             chatSocket.onopen = function() {
             console.log('WebSocket connection established.');
@@ -370,7 +398,10 @@
             // Event listener for incoming messages
             chatSocket.onmessage = function(event) {
                 const receivedMessage = JSON.parse(event.data);
-                console.log('Received message:', receivedMessage.user);
+                console.log('Received message:', receivedMessage);
+
+                const types = {'audio':set_audio, 'text': set_text, 'photo':set_photo, 'video':set_video}
+
                 if(receivedMessage.user == me){
                     document.querySelector('#messages_container').innerHTML += `
                     <div class="our_message">
@@ -384,19 +415,18 @@
                     `
                 }
                 else{
-                    document.querySelector('#messages_container').innerHTML += `
+                    content = types[receivedMessage.typeOfMessage](receivedMessage.message)
+                        document.querySelector('#messages_container').innerHTML += `
                     <div class="their_message">
                 <div class="chat_username_message_their">
-                    ${driverName}
+                    ${receivedMessage.department}
                 </div>
                 <div class="content_their">
-                    <div>${receivedMessage.message}</div>
+                    ${content}
                 </div>
             </div>
                     `
                 }
-                
-            
             };
 
             // Event listener for any errors
@@ -410,7 +440,7 @@
             };
         }
 
-        document.querySelector('#send').onclick = send();
+        // document.querySelector('#send').onclick = send();
 
         function checkEnter(event) {
             if (event.keyCode === 13) {
@@ -427,7 +457,9 @@
                     'message': message,
                     'user':me,
                     'driver': driver,
-                    'chat': RoomId
+                    'chat': RoomId,
+                    'department': department,
+                    'typeOfMessage': 'text'
                 }));
                 console.log(driver)
                 messageInputDom.value = '';
@@ -443,7 +475,7 @@
                 <div class="user_chat unfocused" id="" onclick="enter_chat(${chat.pk}, ${chat.fields.driver})">
                     <div class="content_chats">
                         <div class="img_container">
-                            <img src="{% static '/test.jpg' %}" id="">
+                            <img src="" id="">
                         </div>
 
                         <div class="text_user_chat">
@@ -458,16 +490,32 @@
                         </div>
 
                     </div>
-
-
                 </div>`;
             })
 
-           
+
         }
 
-    </script>
+        function set_audio(content){
+            static = `{% static "" %}${content}.ogg`
+            return `<audio controls id="audio">
+                        <source src='${static}' type="audio/ogg">`
+        }
 
+        function set_text(content){
+            return `<div>${content}</div>`
+        }
+
+        function set_photo(content){
+            static = `{% static "" %}${content}`
+            return `<img src = '${static}' style = 'width: 100px; height: 100px'>`
+        }
+
+        function set_video(content){
+            static = `{% static "" %}${content}`
+            return `<video src="${static}" width="300" height="200" controls>`
+        }
+    </script>
 </body>
 
 </html>
