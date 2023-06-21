@@ -1,11 +1,6 @@
 from django.db import models
 from time import time
 
-# Create your models here.
-# class Driver(models.Model):
-#     id = models.CharField(primary_key=True, max_length=64)
-#     name = models.CharField(max_length=64)
-
 class Department(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=64, unique=True)
@@ -43,6 +38,7 @@ class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     text = models.TextField(null=True)
     typeOfMessage = models.CharField(max_length=25, choices=TYPE_OF_MESSAGE_CHOICES, default=TEXT)
+    time =models.CharField(max_length=100, default=time())
 
 class Issue(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -56,3 +52,9 @@ class Issue(models.Model):
     # endTime = models.DateTimeField(time())
     department = models.CharField(max_length=64)
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, null=True)
+
+class Notification(models.Model):
+    timeToSend = models.CharField(max_length=100)
+    text = models.TextField()
+    chatToSend = models.IntegerField()
+    typeId = models.IntegerField()

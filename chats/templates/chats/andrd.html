@@ -8,6 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/he/he.js"></script>
+    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
 </head>
 <style>
      body {
@@ -393,58 +394,13 @@
 
             if(chatSocket != null){chatSocket.close()}
 
-            chatSocket = new WebSocket('wss://entinsoft.com:8080/' + id);
+            chatSocket = io('wss://entinsoft.com:8080/' + id);
 
-            chatSocket.onopen = function() {
+            chatSocket.on("connection", (socket) => {
                 console.log('WebSocket connection established.');
-                console.log(chatSocket)
-            };
+            });
 
-            // Event listener for incoming messages
-            chatSocket.onmessage = function(event) {
-                const receivedMessage = JSON.parse(event.data);
-                console.log('Received message:', receivedMessage);
-
-                const types = {'audio':set_audio, 'text': set_text, 'photo':set_photo, 'video':set_video}
-
-                if(receivedMessage.user == me){
-                    document.querySelector('#messages_container').innerHTML += `
-                    <div class="our_message">
-                    <div class="chat_username_message_us">
-                        Me
-                    </div>
-                    <div class="content_us">
-                        <div>${receivedMessage.message}</div>
-                    </div>
-                </div>
-                    `
-                }
-                else{
-                    content = types[receivedMessage.typeOfMessage](receivedMessage.message)
-                        document.querySelector('#messages_container').innerHTML += `
-                    <div class="their_message">
-                <div class="chat_username_message_their">
-                    ${receivedMessage.department}
-                </div>
-                <div class="content_their">
-                    ${content}
-                </div>
-            </div>
-                    `
-                }
-            };
-
-            // Event listener for any errors
-            chatSocket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-            };
-
-            // Event listener for when the connection is closed
-            chatSocket.onclose = function() {
-                console.log('WebSocket connection closed.');
-                // window.location.reload();
-                // alert("Connection to server was lost!")
-            };
+            
         }
 
         // document.querySelector('#send').onclick = send();

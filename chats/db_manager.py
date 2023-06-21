@@ -1,4 +1,5 @@
 import mysql.connector
+from time import time
 
 class DBManager:
     def __init__(self):
@@ -15,9 +16,9 @@ class DBManager:
         return inner
 
     @renew_connection
-    def insert_message(self, tgid, from_user, text, chat_id, departmentName):
-        insertion = 'INSERT INTO chats_message(tgid, from_user, text, chat_id, departmentName) VALUES(%s, %s, %s, %s, %s)'
-        values = (tgid, from_user, text, chat_id, departmentName)
+    def insert_message(self, tgid, from_user, text, chat_id, departmentName, typeOfMessage):
+        insertion = 'INSERT INTO chats_message(tgid, from_user, text, chat_id, departmentName, typeOfMessage, time) VALUES(%s, %s, %s, %s, %s, %s, %s)'
+        values = (tgid, from_user, text, chat_id, departmentName, typeOfMessage, time())
         self.cursor.execute(insertion, values)
         self.conn.commit()
 

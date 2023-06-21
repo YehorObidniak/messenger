@@ -14,6 +14,7 @@
         background: #2c2c2c;
         margin: 0;
         font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+        overflow-y: scroll;
     }
 
     .chat_container {
@@ -37,26 +38,23 @@
 
 
     .input_container {
-        width: 100%;
-        display: flex;
-        height: 5vh;
-        flex-wrap: nowrap;
-        align-items: flex-end;
-        position: fixed;
-        background-color: white;
-        padding: 0.2vh 0 1vh;
-        overflow: hidden;
-        border-top: 1px solid #c7c7c7;
-        bottom: 0;
-        right: 0;
-        left:0;
+    width: 100%;
+    display: flex;
+    height: 5vh;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    position: fixed;
+    background-color: white;
+    padding: 0.2vh 0 1vh;
+    overflow: hidden;
+    border-top: 1px solid #c7c7c7;
+    bottom: 0;
+    right: 0;
+    left:0;
     }
 
-    .content{
-        height: 100%;
-    }
 
-    .input_container input {
+    .input_container textarea {
         width: 87%;
         height: 3vh;
         font-size: 2vh;
@@ -66,7 +64,7 @@
         margin-left: 0.5vw;
     }
 
-    .input_container input:focus {
+    .input_container textarea:focus {
         outline: none;
         border: none;
 
@@ -87,7 +85,6 @@
     }
 
     .messages {
-        overflow-y: scroll;
         padding: 10px;
         margin-top: 3vh;
         position: relative;
@@ -314,27 +311,29 @@
         const me = '{{me}}';
         const department = '{{department}}';
 
-        let chatSocket;
-        let driver;
-        let driverName;
+        let update = false;
+        let closing = false;
         let RoomId;
+        let Old;
+        let count = 0;
+        let inChat = false;
 
-        function iphone()
-        {
+        function iphone(){
+            console.log("1")
             if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            // тут ваш код, який буде виконаний для пристроїв iPhone, iPad і iPod
+            document.body.style.backgroundColor = "red";
 
-            //     document.body.style.backgroundColor = "#874343";
-            document.querySelector('.messages').style.cssText = "overflow-y: scroll; padding: 10px; margin-top: 3vh; position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; margin-bottom: 50vh;";
-            //  document.querySelector('.input_container').style.cssText = "width: 100%; display: flex; height: 5vh; flex-wrap: nowrap; align-items: flex-end; position: fixed; background-color: white; padding: 0.2vh 0 1vh; overflow: hidden; border-top: 1px solid #c7c7c7; bottom: 50%;";
+            document.querySelector('.input_container').style.cssText = "    width: 100%; display: flex;align-items: flex-end;background-color: white;padding: 0.2vh 0 1vh; overflow: hidden;";
 
+            document.querySelector('.messages').style.cssText = "overflow-y: scroll; padding: 10px; margin-top: 3vh; position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding-bottom: 40vh;";
 
-            }
+                }
         }
 
 
         function enter_chat(id, driver_id){
             RoomId = id;
-            driver = driver_id;
 
             let content = document.querySelector(".content");
             content.innerHTML=`<div class="header_container">
@@ -343,16 +342,14 @@
 
                 <div class="chat_container">
                     <div class="messages" id="messages_container">
-                    </div>
+
                 </div>
 
 
-                <div class="input_container" onclick="iphone()">
-                    <input type="text" rows="2" placeholder="Write a message.." id="message" onkeydown="checkEnter(event)"></input>
+                <div class="input_container">
+                    <textarea rows="2" placeholder="Write a message.." id="message" onkeydown="checkEnter(event)"></textarea>
                     <div class="send_button" onclick="send()"><img src="{% static 'next.png' %}"></div>
-                </div>
-                `
-
+                </div>`
 
             fetch('{% url "enter_chat" %}' + '?' + new URLSearchParams(`id=${id}`))
             .then(response => response.json())
@@ -391,40 +388,62 @@
             })
             })
 
-            if(chatSocket != null){chatSocket.close()}
+            scroll();
 
-            chatSocket = new WebSocket('wss://entinsoft.com:8080/' + id);
+            checkUpdate();
+        }
 
-            chatSocket.onopen = function() {
-                console.log('WebSocket connection established.');
-                console.log(chatSocket)
-            };
+        async function checkUpdate(){
+            if(update){
+                console.log("NO:", update)
+                await sleep(10);
+                checkUpdate()
+            }
+            else{
+                console.log("update")
+                update = true;
+                closing = false;
+                Old = Math.floor(Date.now() / 1000);
+                getUpdate(Old, RoomId)
+            }
+        }
 
-            // Event listener for incoming messages
-            chatSocket.onmessage = function(event) {
-                const receivedMessage = JSON.parse(event.data);
-                console.log('Received message:', receivedMessage);
+        async function scroll(){
+            if(document.getElementById('messages_container').innerHTML.trim().length == 0){
+                await sleep(10)
+                scroll()
+            }
+            else{window.scrollTo(0, document.body.scrollHeight); inChat = true;}
+        }
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function getUpdate(old, id){
+            console.log("request")
+            let done = false
+            fetch('{% url "get_update" %}' + `?old=${old}&id=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                let messages = JSON.parse(data.messages)
+                console.log('\n')
+                console.log(messages)
+                Old = JSON.parse(data.old)
+                console.log(`old:${old};curr:${Old}`)
+                done = true
+
+                if (messages.length == 0){return}
 
                 const types = {'audio':set_audio, 'text': set_text, 'photo':set_photo, 'video':set_video}
 
-                if(receivedMessage.user == me){
+                messages.map(message => {
+                    if(message.fields.from_user != me){
+                    content = types[message.fields.typeOfMessage](message.fields.text)
                     document.querySelector('#messages_container').innerHTML += `
-                    <div class="our_message">
-                    <div class="chat_username_message_us">
-                        Me
-                    </div>
-                    <div class="content_us">
-                        <div>${receivedMessage.message}</div>
-                    </div>
-                </div>
-                    `
-                }
-                else{
-                    content = types[receivedMessage.typeOfMessage](receivedMessage.message)
-                        document.querySelector('#messages_container').innerHTML += `
                     <div class="their_message">
                 <div class="chat_username_message_their">
-                    ${receivedMessage.department}
+                    ${message.fields.departmentName}
                 </div>
                 <div class="content_their">
                     ${content}
@@ -432,22 +451,13 @@
             </div>
                     `
                 }
-            };
+            })
+            })
 
-            // Event listener for any errors
-            chatSocket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-            };
-
-            // Event listener for when the connection is closed
-            chatSocket.onclose = function() {
-                console.log('WebSocket connection closed.');
-                // window.location.reload();
-                // alert("Connection to server was lost!")
-            };
+            await sleep(2000)
+            if(closing){update = false}
+            if(update){getUpdate(Old, RoomId)}
         }
-
-        // document.querySelector('#send').onclick = send();
 
         function checkEnter(event) {
             if (event.keyCode === 13) {
@@ -458,22 +468,33 @@
 
         function send(){
             const messageInputDom = document.querySelector('#message');
-                const message = messageInputDom.value;
-                // const driver = document.querySelector('#driver').innerText;
-                chatSocket.send(JSON.stringify({
-                    'message': message,
-                    'user':me,
-                    'driver': driver,
-                    'chat': RoomId,
-                    'department': department,
-                    'typeOfMessage': 'text'
-                }));
-                console.log(driver)
-                messageInputDom.value = '';
+            const message = messageInputDom.value;
+
+            document.querySelector('#messages_container').innerHTML += `
+                    <div class="our_message">
+                    <div class="chat_username_message_us">
+                        Me
+                    </div>
+                    <div class="content_us">
+                        <div>${message}</div>
+                    </div>
+                </div>
+                    `
+
+            fetch('{% url "send_message" %}' + `?chat=${RoomId}&message=${message}&department=${department}&user=${me}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("ok")
+            })
+
+            messageInputDom.value = '';
         }
 
         function to_users() {
-            chatSocket.close()
+            closing = true;
+            inChat = false;
+            count = 0;
+
             let content = document.querySelector(".content");
             content.innerHTML = '';
             chats.map(chat =>{
@@ -497,8 +518,6 @@
                         </div>
 
                     </div>
-
-
                 </div>`;
             })
 
@@ -525,11 +544,55 @@
             return `<video src="${static}" width="300" height="200" controls>`
         }
 
-        // window.onerror = function(message, url, line, column, error) {
-        //   alert("Error: " + message);
-        // };
-    </script>
+        function load(){
+            count++;
+            fetch('{% url "get_old" %}' + `?id=${RoomId}&count=${count}`)
+            .then(response => response.json())
+            .then(data => {
+                let messages = JSON.parse(data.messages)
+                console.log(messages)
 
+                const types = {'audio':set_audio, 'text': set_text, 'photo':set_photo, 'video':set_video}
+                container = document.querySelector('#messages_container')
+
+                messages.map(message => {
+                    const newElement = document.createElement('div')
+                    if(message.fields.from_user == me){
+                    newElement.classList.add('our_message')
+                    newElement.innerHTML += `<div class="chat_username_message_us">
+                        Me
+                    </div>
+                    <div class="content_us">
+                        <div>${message.fields.text}</div>
+                    </div>`
+                }
+                else{
+                    newElement.classList.add('their_message')
+                    content = types[message.fields.typeOfMessage](message.fields.text)
+                    newElement.innerHTML += `<div class="chat_username_message_their">
+                    ${message.fields.departmentName}
+                </div>
+                <div class="content_their">
+                    ${content}
+                </div>
+            </div>`
+                }
+                container.insertBefore(newElement, container.firstChild)
+            })
+            })
+        }
+
+        function isScrolledToTop(){
+            return (document.documentElement.scrollTop || document.body.scrollTop) === 0
+        }
+
+        window.addEventListener('scroll', function() {
+            if (inChat && isScrolledToTop()) {
+                console.log('User has scrolled to the top');
+                load();
+            }
+        });
+    </script>
 </body>
 
 </html>

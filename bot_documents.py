@@ -5,7 +5,7 @@ import websockets
 import json
 import mysql.connector
 import ssl
-from db_manager import DBManager
+from messenger.chats.db_manager import DBManager
 import boto3
 
 ssl_context = ssl.SSLContext()

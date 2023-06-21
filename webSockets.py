@@ -3,11 +3,11 @@ from websockets.server import serve
 import websockets
 import json
 import bot_documents
-import bot_sales
+import messenger.chats.bot_sales as bot_sales
 import mysql.connector
 import ssl
 import os
-from db_manager import DBManager
+from messenger.chats.db_manager import DBManager
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 cert = os.path.join(script_dir, "entinsoft.crt")
