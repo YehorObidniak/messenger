@@ -18,6 +18,7 @@ class Chat(models.Model):
     id = models.IntegerField(primary_key=True)
     chat_name = models.CharField(max_length=128, null=True)
     users = models.ManyToManyField(Users)
+    lastTimeInteracted = models.IntegerField(null=True)
     
 class Message(models.Model):
     PHOTO = "photo"
@@ -52,9 +53,17 @@ class Issue(models.Model):
     # endTime = models.DateTimeField(time())
     department = models.CharField(max_length=64)
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, null=True)
+    active = models.BooleanField(default=True)
+
+class NotificationTypes(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    
 
 class Notification(models.Model):
-    timeToSend = models.CharField(max_length=100)
+    timeToSendNext = models.IntegerField()
     text = models.TextField()
-    chatToSend = models.IntegerField()
-    typeId = models.IntegerField()
+    bitrixId = models.IntegerField()
+    typeId = models.IntegerField(default=1)
+    notificatedCount = models.IntegerField(default=0)
+    sendInterval = models.IntegerField(default=0)
+    active = models.BooleanField(default=False)

@@ -2,7 +2,7 @@ from aiogram import executor, Bot, types, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 
-DEPARTMENT_NAME = 'CarsHauler'
+DEPARTMENT_NAME = 'document'
 
 token = '5877397302:AAGifsgJrKUZR78oGRnysCKmxINHzkYOVnU'
 bot = Bot(token)
